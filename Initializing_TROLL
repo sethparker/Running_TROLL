@@ -1,0 +1,11 @@
+# # # # # # # # # # # # # # # # # # # # # # # # 
+# ########################################### #
+# # INITIALIZING THE TROLL MODEL ON THE CRC # #
+# ########################################### #
+# # # # # # # # # # # # # # # # # # # # # # # #
+
+# There are a number of options when running the TROLL model. One of the most 
+# useful is the model's ability to initiate from provided forest conditions,
+# or bare ground. If intializing from data, you will need to open the model
+# and turn _FROM_DATA = 0 to _FROM_DATA = 1 before compiling, as well as supply
+# an input file describing the structure of the forest you wish to simulate.
