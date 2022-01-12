@@ -1,5 +1,5 @@
 # Running_TROLL
-R and bash scripts to be used in conjunction with the TROLL model for smooth initialization of batch jobs
+R and bash scripts to be used in conjunction with the TROLL model for smooth initialization of batch jobs.
 
 The purpose of this repository is to facilitate the easy initialization and running of the TROLL model on the Notre Dame CRC, as well as provide for simple visualization and analysis of model output. The repository is broken into 3 sections:
 
