@@ -3,3 +3,13 @@
 # #  RUNNING TROLL ON THE CRC  #  #
 # ##############################  #
 # # # # # # # # # # # # # # # # # #
+
+#######################
+# Compiling the model #
+#######################
+# Compiling the model can either be done manually, or with a makefile.
+# To compile manually, type
+
+icpc -o main_v2.3.2 main_v2.3.2.cpp
+
+# Alternatively, generate a makefile to handle compiltion
