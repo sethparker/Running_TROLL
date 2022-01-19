@@ -10,6 +10,30 @@
 # Compiling the model can either be done manually, or with a makefile.
 # To compile manually, type
 
-icpc -o main_v2.3.2 main_v2.3.2.cpp
+$ icpc -o main_v2.3.2 main_v2.3.2.cpp
 
-# Alternatively, generate a makefile to handle compiltion
+# Alternatively, generate a makefile to handle compiltion.
+
+$ cat Makefile
+
+CC=icpc
+CFLAGS=-std=c++11 -O2
+troll: main_v2.3.2.cpp
+	$(CC) $(CFLAGS) -o main_v2.3.2 main_v2.3.2.cpp
+  
+# This allows you to compile the model simply by typing
+
+$ make
+
+#####################
+# Running the model #
+#####################
+# Submitting jobs can be done individually, or in batches. The input will
+# be slightly different depending on if you are intitializing from data or not.
+# To submit an individual simulation intializing from bare ground, type
+
+$ ./main_v2.3.2 -iCR_liana.txt -otst
+
+# Jobs initializing from data will also need to include the -f flag
+
+$ ./main_v2.3.2 -iCR_liana.txt -fforestconfig.txt -otst
