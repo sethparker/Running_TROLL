@@ -30,10 +30,62 @@ $ make
 #####################
 # Submitting jobs can be done individually, or in batches. The input will
 # be slightly different depending on if you are intitializing from data or not.
+# Running on the frontend is suitable for test runs, but full runs should be
+# submitted to the CRC job queue.
+
+# # # # # # # # # # # # # #
+# Running on the frontend #
+# # # # # # # # # # # # # #
 # To submit an individual simulation intializing from bare ground, type
 
 $ ./main_v2.3.2 -iCR_liana.txt -otst
 
 # Jobs initializing from data will also need to include the -f flag
+# forestconfig.txt is discussed in (1) Initializing TROLL
 
 $ ./main_v2.3.2 -iCR_liana.txt -fforestconfig.txt -otst
+
+# # # # # # # # # # # # # # # # 
+# Submitting jobs to the queue #
+# # # # # # # # # # # # # # # # 
+# You will need a .job file to submit a job to the CRC queue.
+
+$ cat liana.job
+
+#!/bin/csh
+#$ -M sparker3@nd.edu
+#$ -m abe
+#$ -q *@@medvigy
+#$ -pe smp 1
+#$ -N TROLL
+
+./main_v2.3.2 -iinput -fforestconfig.txt -oens
+
+# To submit a single run, you will type
+
+$ qsub liana.job
+
+# Shell scripting allows you to modify your .job file to submit batches of runs.
+# Running batches of jobs vastly simplifies ensemble and sensitivity analysis.
+# run_batch.sh automates the generation, submission, and deletion of a batch of
+# .job files. Modifying the for loop alters the number of runs in the batch.
+# For batches of runs, you will need to generate a batch of input files.
+# This is discussed in detail in (1) Initializing TROLL
+
+$ cat run_batch.sh
+
+#!/bin/bash
+
+for isite in {1..50};
+do
+    cp liana.job liana_${isite}.job
+    sed -i s@-iinput@-iinput${isite}@g liana_${isite}.job
+    sed -i s@TROLL@TROLL_${isite}@g liana_${isite}.job
+    sed -i s@-oens@-oens_${isite}@g liana_${isite}.job
+    qsub liana_${isite}.job
+    rm liana_${isite}.job
+done
+
+# To submit a batch of runs, you will type
+
+$ sh run_batch.sh
