@@ -4,8 +4,26 @@
 # ########################################### #
 # # # # # # # # # # # # # # # # # # # # # # # #
 
+##############
+# _FromData #
+##############
 # There are a number of options when running the TROLL model. One of the most 
 # useful is the model's ability to initiate from provided forest conditions,
 # or bare ground. If intializing from data, you will need to open the model
-# and turn _FROM_DATA = 0 to _FROM_DATA = 1 before compiling, as well as supply
+# and turn _FromData = 0 to _FromData = 1 before compiling, as well as supply
 # an input file describing the structure of the forest you wish to simulate.
+# The input file, forestconfig.txt, should be of the same format as follows
+
+$ cat forestconfig.txt
+
+### y x dbh(mm) species nhosts hosty hostx LCrownRad LcrownDep Ldbh
+100 100 250 12
+100 100 20 45 1 100 100 0.001 0.001 45
+
+# The species code corresponds to the order in which the species appear in
+# the input file.
+
+####################
+# TROLL input file #
+####################
+
