@@ -3,6 +3,10 @@
 # # INITIALIZING THE TROLL MODEL ON THE CRC # #
 # ########################################### #
 # # # # # # # # # # # # # # # # # # # # # # # #
+# It is strongly recommended to have a dedicated TROLL directory in your CRC
+# space for running the model, as well as a directory on your personal computer
+# for organizin and storing model output.
+
 ####################
 # TROLL input file #
 ####################
@@ -22,7 +26,51 @@
 #####################################
 # Generating batches of input files #
 #####################################
-# For ensemble analysis,
+# For ensemble analysis, parameters are simultaneously and uniformly varied
+# across the full range of values established for each parameter. This process
+# begins by generating a series of values to be used. In this example, I will
+# vary vox_la_max and shed_median over a 50-run ensemble. The scripts used
+# here can easily be adapted to vary other parameters, or for larger batches.
+
+# # # # # # # # # # # # # # # #
+# Generate replacement values #
+# # # # # # # # # # # # # # # #
+# I do this portion in R.
+
+# Begin by setting you WD to your TROLL directory.
+setwd("/Users/yourname/Documents/GradSchool/TROLL")
+
+values <- runif(50, min = 0.8, max = 3) # Vox_LA_max
+values <- cbind(values,runif(50, min = 0.007, max = 0.05)) # shed_median
+write.csv(values,"values.txt")
+
+# Now navigate to the TROLL directory, and open the file in Excel. 
+# Delete the leftmost column, which is indexed, as well as the title
+# "values" in the first row. Next, highlight all of the values, and
+# drag them to be flush with cell A1. Now save the file. Excel will
+# try to get you to save the file as a workbook. You can ignore that;
+# we just need the .csv. The bash script I have set up for generating
+# batches reads tab separated values, so we can convert our .csv file
+# using the following bash commands in the TROLL directory.
+
+$ cat values.txt | sed 's/,/    /g' > values.txt
+
+# At this point, you are ready to migrate values.txt to your TROLL directory
+# on the CRC. You can use the scp command for this, but it is honestly quicker
+# to just type
+
+$ cat values.txt
+
+# and then copy/paste your values into a new values.txt in your CRC directory.
+# Dealer's choice.
+
+# # # # # # # # # # # # # # # # #
+# Generate batch of input files #
+# # # # # # # # # # # # # # # # #
+# A bash script employing the awk command is used to replace values specified
+# in CR_liana.txt with values from your values.txt. The awk script specifies
+# which row of CR_liana.txt is to be replaced with the new values. In this case,
+# we replace rows # and # of CR_liana.txt with columns 1 and 2 of values.txt
 
 ##############
 # _FromData #
