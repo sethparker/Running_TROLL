@@ -12,7 +12,7 @@
 
 $ icpc -o main_v2.3.2 main_v2.3.2.cpp
 
-# Alternatively, generate a makefile to handle compiltion.
+# Alternatively, generate a makefile to handle compilation.
 
 $ cat Makefile
 
