@@ -19,6 +19,11 @@
 # shed_median: determines likelihood of host shedding liana leaves. 0.007-0.05
 # knock_median: determines likelihood of liana damaging host. 0.007-0.05
 
+#####################################
+# Generating batches of input files #
+#####################################
+# For ensemble analysis,
+
 ##############
 # _FromData #
 ##############
