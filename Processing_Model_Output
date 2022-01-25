@@ -23,6 +23,8 @@
 # TROLL outputs 2 comma separated files ending in liana_canopy_arc.txt and
 # tree_canopy_arc.txt. These contain information on plants initialized from data.
 
+library('dplyr')
+
 num_ens <- 1 # Enter the number of runs in the ensemble
 num_steps <- 120 # Enter the number of months modeled
 
