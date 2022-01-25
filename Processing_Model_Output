@@ -20,3 +20,12 @@
 #################################
 # STEP 4: Visualize and analyze #
 #################################
+
+# # # # # # # # # # # #
+# Canopy architecture #
+# # # # # # # # # # # #
+# TROLL outputs 2 comma separated files ending in liana_canopy_arc.txt and
+# tree_canopy_arc.txt. These contain information on plants initialized from data.
+
+# Set your working directory
+
