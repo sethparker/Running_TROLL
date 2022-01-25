@@ -17,6 +17,57 @@
 # STEP 3: Loading the data into R #
 ###################################
 
+# # # # # # # # # # # #
+# Canopy architecture #
+# # # # # # # # # # # #
+# TROLL outputs 2 comma separated files ending in liana_canopy_arc.txt and
+# tree_canopy_arc.txt. These contain information on plants initialized from data.
+
+num_ens <- 1 # Enter the number of runs in the ensemble
+num_steps <- 120 # Enter the number of months modeled
+
+# Read in an ensemble of canopy_arc.txt files
+ens_liana <- list()
+for (j in 1:num_ens) {
+  # check that file isn't blank (liana died in 1st timestep)
+  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt"))>0)
+  {
+    # import each run
+    ens_liana[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt""), 
+                               header = FALSE)
+    # creating add columns
+    colnames(ens_liana[[j]]) <- c("month","layer","LA")
+    ens_liana[[j]]$run <- j
+  }
+  # if file is blank, generate matrix of 0s
+  else {ens_liana[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 3))
+  colnames(ens_liana[[j]]) <- c("month","layer","LA")
+  ens_liana[[j]]$run <- j
+  }
+}
+# SKIP NEXT STEP IF SINGLE RUN (num_ens = 1)
+# Group by month and layer if ensemble. 
+ens_liana <- bind_rows(ens_liana) %>% group_by(month, layer) %>% 
+  summarize(across(c(LA),list(mu = ~ mean(.), sigma = ~ std.error(.), n = ~ length(.))))
+
+# As dataframe
+liana <- as.data.frame(ens_liana)
+
+# Define the dimensions of your canopy. 
+canopy <- array(dim = c(max(liana$layer+1),4,num_steps))
+
+# Here the canopy width is set to 4 because my canopy depth was 3. 
+# This was done for a pretty visualization. The canopy_arc.txt
+# files only have LA by vertical layer, not horizontal.
+
+# Read LA by layer by month into a 3D array 
+for (i in 1:num_steps) {
+  month <- which(liana$month == i)
+  canopy[liana$layer[month]+1, ,i] <-liana$LA[month]
+}
+
+# You are ready to visualize
+
 #################################
 # STEP 4: Visualize and analyze #
 #################################
@@ -24,8 +75,64 @@
 # # # # # # # # # # # #
 # Canopy architecture #
 # # # # # # # # # # # #
-# TROLL outputs 2 comma separated files ending in liana_canopy_arc.txt and
-# tree_canopy_arc.txt. These contain information on plants initialized from data.
+# We can visualize how each of the different growth strategies distributes leaf
+# area vertically in the canopy.
 
+library('plot.matrix')
+library('magick')
+
+num_ens <- 1 # Enter the number of runs in the ensemble
+num_steps <- 120 # Enter the number of months modeled
+
+## Simple plot of a 1 month snapshot (month 100)
+# Reverse when plotting so layer 1 is on the bottom.
+# Change nrow = and ncol = to match the dimensions of canopy[x,y,]
+plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,100])), ylab = "Canopy layer by meter", 
+     xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
+     border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
+     # Adjust breaks as needed for proper visualization
+     breaks=c(0,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,.1,.5))
+# Adjust axis ticks to match data
+axis(2, at = c(.5,1.5,2.5,3.5), labels = c(0,1,2,3))
+mtext(side = 3, "month 100")
+
+## Animated .gif of LAD change by vertical layer over time
 # Set your working directory
+setwd("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/images")
+
+# Loop over canopy, generate and save a .png image of each timestep
+for (i in 1:num_steps)  {
+  par(mar = c(5.1, 4.1, 4.1, 3.1))
+  
+  png(paste0(file = "top_down_",i,".png"),width = 12, height = 8.5, res = 1200, units = "in")
+  
+  plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,i])), ylab = "Canopy layer by meter", 
+     xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
+     border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
+     # Adjust breaks as needed for proper visualization
+     breaks=c(0,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,.1,.5))
+  # Adjust axis ticks to match data
+  axis(2, at = c(.5,1.5,2.5,3.5),labels = c(0,1,2,3))
+  
+  mtext(side = 3, paste0("month ",i))
+  
+  dev.off()
+}
+
+# List file names and read in
+imgs <- list.files(getwd(), full.names = T)
+img_list <- lapply(imgs, image_read)
+
+# Join the images together
+img_joined <- image_join(img_list)
+
+# Animate at 2 frames per second
+img_animated <- image_animate(img_joined, fps = 2)
+
+# View animated image
+img_animated
+
+# Save to disk
+image_write(image = img_animated,
+            path = "growth_strat.gif")
 
