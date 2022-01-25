@@ -33,7 +33,7 @@ for (j in 1:num_ens) {
   if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt"))>0)
   {
     # import each run
-    ens_liana[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt""), 
+    ens_liana[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt"), 
                                header = FALSE)
     # creating add columns
     colnames(ens_liana[[j]]) <- c("month","layer","LA")
