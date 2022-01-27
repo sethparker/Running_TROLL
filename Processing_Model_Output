@@ -7,15 +7,44 @@
 #####################################
 # STEP 1: Move the data off the CRC #
 #####################################
+# Navigate to the TROLL directory on your personal computer, and set up a
+# directory, or series of directories, for storing the output files you
+# wish to analyze.
+
+$ cd /Users/yourname/Documents/GradSchool/TROLL/
+$ mkdir output
+$ cd output
+
+# Use the scp command to copy your data from remote to local. You will need
+# to enter your NetID and CRC password. Your command will differ slightly
+# from what is shown here, but will be similar. Change what appears after
+# the * to determine what output files will be copied.
+
+$ scp sparker3@crcfe02.crc.nd.edu:/afs/crc.nd.edu/user/s/sparker3/Private/Medvigy_Lab/TROLL/output/*outputs.txt .
 
 ####################################################
 # STEP 2: Convert tab-separated to comma-separated #
 ####################################################
 # This is an easy step, but important for saving you headaches down the road.
+# This script will convert every file in a directory from tab-separated to
+# comma-separated. Be sure your directories do not contain anything you do
+# not want converted.
+
+$ sed -i "" 's/\t/,/g' /Users/yourname/Documents/GradSchool/TROLL/output/*
+
+# You may want to convert everything in multiple subdirectories. For example,
+# you may have ../output/species1 and ../output/species2. To convert the
+# contents of all subdirectories, add another *
+
+$ sed -i "" 's/\t/,/g' /Users/yourname/Documents/GradSchool/TROLL/output/*/*
 
 ###################################
 # STEP 3: Loading the data into R #
 ###################################
+# If you want to simply look at a single output file, read.csv() is perfectly
+# sufficient. I have set up this section in hopes of making it easier to work
+# with large ensembles of runs. I have broken this and the following section
+# down by output type.
 
 # # # # # # # # # # # #
 # Canopy architecture #
@@ -106,7 +135,7 @@ setwd("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/images
 for (i in 1:num_steps)  {
   par(mar = c(5.1, 4.1, 4.1, 3.1))
   
-  png(paste0(file = "top_down_",i,".png"),width = 12, height = 8.5, res = 1200, units = "in")
+  png(paste0(file = "growth_strat_",i,".png"),width = 6, height = 4, res = 300, units = "in")
   
   plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,i])), ylab = "Canopy layer by meter", 
      xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
