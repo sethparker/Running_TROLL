@@ -91,3 +91,6 @@ $ sh run_batch.sh
 
 # If you wish to run a batch with the same paramaterization for each run,
 # comment out the line of run_batch.sh where the input file is varied.
+# Check on the status of your jobs by typing
+
+$ qstat -u yourNetID
