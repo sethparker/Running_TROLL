@@ -5,7 +5,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # #
 # It is strongly recommended to have a dedicated TROLL directory in your CRC
 # space for running the model, as well as a directory on your personal computer
-# for organizin and storing model output.
+# for organizing and storing model output.
 
 ####################
 # TROLL input file #
@@ -71,6 +71,18 @@ $ cat values.txt
 # in CR_liana.txt with values from your values.txt. The awk script specifies
 # which row of CR_liana.txt is to be replaced with the new values. In this case,
 # we replace rows # and # of CR_liana.txt with columns 1 and 2 of values.txt
+
+$ cat .awk
+
+
+# Make a copy of CR_liana.txt so the original is at no risk of being altered.
+
+$ cp CR_liana.txt input
+
+# Run your .awk script over your input and values.txt to generate a series
+# of numbered input files equal to $ wc -l values.txt
+
+$ awk -f .awk input values.txt
 
 ##############
 # _FromData #
