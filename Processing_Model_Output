@@ -46,6 +46,112 @@ $ sed -i "" 's/\t/,/g' /Users/yourname/Documents/GradSchool/TROLL/output/*/*
 # with large ensembles of runs. I have broken this and the following section
 # down by output type.
 
+# # # # # # # # # # # # # #
+# Liana induced mortality #
+# # # # # # # # # # # # # #
+# All mortality except negative NPP must be turned OFF for this analysis.
+# We will analyze from_data.txt files
+
+# Model parameters
+num_tree <- 1 # Enter the number of tree species modeled
+num_liana <- 1 # Enter the number of liana species modeled
+num_sp <- num_tree + num_liana
+num_steps <- 120 # Enter the number of months modeled
+num_ens <- 500 # Enter the number of realizations in each ensemble
+# Load in species data from modified TROLL input file (species table only, comma separated)
+species_info <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/species_table.txt", header = TRUE)
+
+# For this analysis, you will initialize a batch of jobs where the same liana is attached
+# to the same tree via forestconfig.txt.
+# Here we will look at tree species 1 and liana species 45.
+# This script is easily altered to include more than 1 species of tree and liana.
+# Tree: Alvaradoa amarphoides (ALAM)
+# Liana: Mimosa tenuifolia (MITE)
+
+# Read in tree
+ALAM <- list()
+for (j in 1:num_ens) {
+  # check that file isn't blank (tree died in 1st timestep)
+  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_tree_from_data.txt"))>0)
+  {
+    # import each run
+    ALAM[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_tree_from_data.txt"), 
+                              header = FALSE)
+    # creating add columns
+    colnames(ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+    ALAM[[j]]$month <- seq.int(nrow(ALAM[[j]]))
+    ALAM[[j]]$run <- j
+  }
+  # if file is blank, generate matrix of 0s
+  else {ALAM[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+  colnames(ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+  ALAM[[j]]$month <- seq.int(nrow(ALAM[[j]]))
+  ALAM[[j]]$run <- j
+  }
+}
+
+# And it's liana
+MITE_ALAM <- list()
+for (j in 1:num_ens) {
+  # check that file isn't blank (liana died in 1st timestep)
+  if (file.size(paste0(""/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt"))>0)
+  {
+    # import each run
+    MITE_ALAM[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt""), 
+                               header = FALSE)
+    # creating add columns
+    colnames(MITE_ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+    MITE_ALAM[[j]]$month <- seq.int(nrow(MITE_ALAM[[j]]))
+    MITE_ALAM[[j]]$run <- j
+  }
+  # if file is blank, generate matrix of 0s
+  else {MITE_ALAM[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+  colnames(MITE_ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+  MITE_ALAM[[j]]$month <- seq.int(nrow(MITE_ALAM[[j]]))
+  MITE_ALAM[[j]]$run <- j
+  }
+}
+
+# Generate matrix to store info on months survived
+df <- matrix(ncol = num_tree, nrow = num_ens)
+
+# Populate matrix
+for (k in 1:num_ens) {
+  df[k,1] <- length(ALAM[[k]]$month)
+  }
+  
+# Add species names
+names(df) <- species_info[1:num_tree,1]
+
+# Calculate death rate out of 500 (%)
+death_rate <- c()
+for (k in 1:num_tree) {
+  death_rate[k] <- (500-tail(table(df[,k]),1))/5
+}
+
+# Subset species_info for species-specific traits
+fg <- species_info[c(1:num_tree),]
+fg <- subset(fg, select = -c(dmax,tmax,Fregdistgr,g1,s_liana))
+
+# Add death rate to species info
+fg$death_rate <- death_rate
+
+# Calculate SLA, Vcmax, and Rdark
+fg$SLA <- 10000/fg$LMA
+Vcmax <- c()
+Rdark <- c()
+Rdarkm <- c()
+for (i in 1:num_tree) {
+Vcmax[i] <- 10^min(-1.56+0.43*log10(fg$Nmass[i]*1000.0)+0.37*log10(fg$SLA[i]),-0.80+0.45*log10(fg$Pmass[i]*1000.0)+0.25*log10(fg$SLA[i]))
+Rdark[i] <- fg$LMA[i]*(8.5341-130.6*fg$Nmass[i]-567.0*fg$Pmass[i]-0.0137*fg$LMA[i]+11.1*Vcmax[i]+187600.0*fg$Nmass[i]*fg$Pmass[i])*0.001
+Rdarkm[i] <- 8.5341-130.6*fg$Nmass[i]-567.0*fg$Pmass[i]-0.0137*fg$LMA[i]+11.1*Vcmax[i]+187600.0*fg$Nmass[i]*fg$Pmass[i]*0.001
+}
+fg$Vcmax <- Vcmax
+fg$Rdark <- Rdark
+fg$Rdarkm <- Rdarkm
+
+# fg is ready for regression analysis
+
 # # # # # # # # # # # #
 # Canopy architecture #
 # # # # # # # # # # # #
@@ -102,6 +208,30 @@ for (i in 1:num_steps) {
 #################################
 # STEP 4: Visualize and analyze #
 #################################
+# # # # # # # # # # # # # #
+# Liana induced mortality #
+# # # # # # # # # # # # # #
+# We can use linear regression to determine which species-specific traits
+# control the ability of lianas to kill their hosts
+
+library('car')
+library('ggplot2')
+
+# It may be useful to only look at instances where death_rate > 0
+fg <- subset(fg, death_rate > 0)
+
+# If log transforming, do this before modeling
+fg$LMA <- log(fg$LMA)    # etc...
+
+# Play with the regression variables to find the best fit.
+model1 <- lm(data = fg, death_rate ~ LMA + Pmass + wsg)
+
+# You can visualize with added variable plots
+avPlots(model1)
+
+# As well as look at the residuals
+res <- qplot(fitted(model1), resid(model1))
+res+geom_hline(yintercept=0)+theme_classic()
 
 # # # # # # # # # # # #
 # Canopy architecture #
