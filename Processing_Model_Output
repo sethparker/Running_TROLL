@@ -94,7 +94,7 @@ for (j in 1:num_ens) {
 MITE_ALAM <- list()
 for (j in 1:num_ens) {
   # check that file isn't blank (liana died in 1st timestep)
-  if (file.size(paste0(""/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt"))>0)
+  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt"))>0)
   {
     # import each run
     MITE_ALAM[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt""), 
