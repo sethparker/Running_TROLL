@@ -69,7 +69,9 @@ $ qsub liana.job
 # run_batch.sh automates the generation, submission, and deletion of a batch of
 # .job files. Modifying the for loop alters the number of runs in the batch.
 # For batches of runs, you will need to generate a batch of input files.
-# This is discussed in detail in (1) Initializing TROLL
+# This is discussed in detail in (1) Initializing TROLL. If you do not wish to 
+# receive emails when each of your jobs starts and finishes (can be overwhelming
+# for large batches), comment out the lines of liana.job beginning with $# -M and $# -m
 
 $ cat run_batch.sh
 
@@ -90,7 +92,8 @@ done
 $ sh run_batch.sh
 
 # If you wish to run a batch with the same paramaterization for each run,
-# comment out the line of run_batch.sh where the input file is varied.
+# comment out the line of run_batch.sh where the input file is varied. 
+
 # Check on the status of your jobs by typing
 
 $ qstat -u yourNetID
