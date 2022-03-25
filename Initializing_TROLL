@@ -70,10 +70,27 @@ $ cat values.txt
 # A bash script employing the awk command is used to replace values specified
 # in CR_liana.txt with values from your values.txt. The awk script specifies
 # which row of CR_liana.txt is to be replaced with the new values. In this case,
-# we replace rows # and # of CR_liana.txt with columns 1 and 2 of values.txt
+# we replace rows 37 and 44 of CR_liana.txt with columns 1 and 2 of values.txt
 
-$ cat .awk
+$ cat replace.awk
 
+BEGIN {
+    split("37 44",tmp)
+    for (fldNr in tmp) {
+        map[tmp[fldNr]] = fldNr
+    }
+}
+NR==FNR {
+    rows[++numRows] = $i
+    next
+}
+{
+    out = "input" FNR
+    for (rowNr=1; rowNr<=numRows; rowNr++) {
+        print (rowNr in map ? $(map[rowNr]) : rows[rowNr]) > out
+    }
+    close(out)
+}
 
 # Make a copy of CR_liana.txt so the original is at no risk of being altered.
 
@@ -82,7 +99,7 @@ $ cp CR_liana.txt input
 # Run your .awk script over your input and values.txt to generate a series
 # of numbered input files equal to $ wc -l values.txt
 
-$ awk -f .awk input values.txt
+$ awk -f replace.awk input values.txt
 
 ##############
 # _FromData #
