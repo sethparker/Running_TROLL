@@ -164,86 +164,54 @@ for (i in 1:num_steps) {
 # nested list to keep your data organized, rather than have a series of objects 
 # labeled tree1-tree500. The following code can be easily adapted to load in ensembles
 # of files. This loop assumes your files are named such as ens_#_0_*.txt, in congruence
-# with the Running_TROLL
+# with the Running_TROLL directory guide on submitting batches of jobs.
 
+# This example uses an ensemble of liana_from_data.txt files
+
+library('dplyr')
+library('plotrix')
+
+# initialize a blank list
 ens <- list()
+# loop over the number of runs in the ensemble
 for (j in 1:num_ens) {
   # check that file isn't blank (plant died in 1st timestep)
   if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/ens_",j,"_0_liana_from_data.txt"))>0)
   {
     # import each run
-    ens_liana_500[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/ens_",j,"_0_liana_from_data.txt"), 
-                                   header = FALSE)
-    # creating add columns
-    colnames(ens_liana_500[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
-    ens_liana_500[[j]]$month <- seq.int(nrow(ens_liana_500[[j]]))
-    ens_liana_500[[j]]$run <- j
+    ens[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/ens_",j,"_0_liana_from_data.txt"), 
+                                header = FALSE)
+    # labeling the columns
+    colnames(ens[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+    # creating add. columns (month/timestep and run number)
+    ens[[j]]$month <- seq.int(nrow(ens[[j]]))
+    ens[[j]]$run <- j
   }
-  # if file is blank, generate matrix of 0s
-  else {ens_liana_500[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
-  colnames(ens_liana_500[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
-  ens_liana_500[[j]]$month <- seq.int(nrow(ens_liana_500[[j]]))
-  ens_liana_500[[j]]$run <- j
+  # if file is blank (died in first timestep), generate matrix of 0s
+  else {ens[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+  # and label it as above
+  colnames(ens[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+  ens[[j]]$month <- seq.int(nrow(ens[[j]]))
+  ens[[j]]$run <- j
   }
 }
-ens_liana_500 <- bind_rows(ens_liana_500) %>% group_by(month) %>% 
-  summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), 
+
+# This loop generates an object 'ens', containing 500 individual dataframes. You
+# may want to calculate the average for each of your values in each timestep.
+# This can be completed as follows
+
+ens_mean <- bind_rows(ens) %>% group_by(month) %>% 
+  summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius),
+                   # mu values give the mean
+                   # sigma values give the std. error
+                   # n values give the number of ensemble members surviving in each timestep
                    list(mu = ~ mean(.), sigma = ~ std.error(.), n = ~ length(.))))
-
-
-
-# # # # # # # # # # # #
-# Canopy architecture #
-# # # # # # # # # # # #
-# TROLL outputs 2 comma separated files ending in liana_canopy_arc.txt and
-# tree_canopy_arc.txt. These contain information on plants initialized from data.
-
-library('dplyr')
-
-num_ens <- 1 # Enter the number of runs in the ensemble
-num_steps <- 120 # Enter the number of months modeled
-
-# Read in an ensemble of canopy_arc.txt files
-ens_liana <- list()
-for (j in 1:num_ens) {
-  # check that file isn't blank (liana died in 1st timestep)
-  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt"))>0)
-  {
-    # import each run
-    ens_liana[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/ens_",j,"_0_liana_canopy_arc.txt"), 
-                               header = FALSE)
-    # creating add columns
-    colnames(ens_liana[[j]]) <- c("month","layer","LA")
-    ens_liana[[j]]$run <- j
-  }
-  # if file is blank, generate matrix of 0s
-  else {ens_liana[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 3))
-  colnames(ens_liana[[j]]) <- c("month","layer","LA")
-  ens_liana[[j]]$run <- j
-  }
-}
-# SKIP NEXT STEP IF SINGLE RUN (num_ens = 1)
-# Group by month and layer if ensemble. 
-ens_liana <- bind_rows(ens_liana) %>% group_by(month, layer) %>% 
-  summarize(across(c(LA),list(mu = ~ mean(.), sigma = ~ std.error(.), n = ~ length(.))))
-
-# As dataframe
-liana <- as.data.frame(ens_liana)
-
-# Define the dimensions of your canopy. 
-canopy <- array(dim = c(max(liana$layer+1),4,num_steps))
-
-# Here the canopy width is set to 4 because my canopy depth was 3. 
-# This was done for a pretty visualization. The canopy_arc.txt
-# files only have LA by vertical layer, not horizontal.
-
-# Read LA by layer by month into a 3D array 
-for (i in 1:num_steps) {
-  month <- which(liana$month == i)
-  canopy[liana$layer[month]+1, ,i] <-liana$LA[month]
-}
-
-# You are ready to visualize
+                   
+# Object 'ens_mean' now contains the mean and std. error for each metric at each timestep,
+# as well as the number of plants surviving to each timestep.
+                   
+# These scripts can be easily adapted to use with different files by manipulating 
+# the column names and dataframe dimensions.
 
 #################################
 # STEP 4: Visualize and analyze #
