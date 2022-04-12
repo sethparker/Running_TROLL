@@ -41,131 +41,155 @@ $ sed -i "" 's/\t/,/g' /Users/yourname/Documents/GradSchool/TROLL/output/*
 
 $ sed -i "" 's/\t/,/g' /Users/yourname/Documents/GradSchool/TROLL/output/*/*
 
-###################################
-# STEP 3: Loading the data into R #
-###################################
-# If you want to simply look at a single output file, read.csv() is perfectly
-# sufficient. I have set up this section in hopes of making it easier to work
-# with large ensembles of runs.
+#################################
+# STEP 3: Looking at data in  R #
+#################################
+# Begin by defining variables to help your workflow. Change these as needed
 
-# # # # # # # # #
-# Single Files  #
-# # # # # # # # #
-# Outputs
-output <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_outputs.txt")
-# From Data
-tree <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_tree_from_data.txt")
-liana <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_from_data.txt")
-# Canopy Architecture 
-tree_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_tree_canopy_arc.txt")
-liana_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_canopy_arc.txt")
-
-
-# # # # # # # # # # # # # #
-# Liana induced mortality #
-# # # # # # # # # # # # # #
-# All mortality except negative NPP must be turned OFF for this analysis.
-# We will analyze from_data.txt files
-
-# Model parameters
-num_tree <- 1 # Enter the number of tree species modeled
-num_liana <- 1 # Enter the number of liana species modeled
+num_tree <- 38 # Enter the number of tree species modeled
+num_liana <- 8 # Enter the number of liana species modeled
 num_sp <- num_tree + num_liana
 num_steps <- 120 # Enter the number of months modeled
 num_ens <- 500 # Enter the number of realizations in each ensemble
 # Load in species data from modified TROLL input file (species table only, comma separated)
 species_info <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/species_table.txt", header = TRUE)
 
-# For this analysis, you will initialize a batch of jobs where the same liana is attached
-# to the same tree via forestconfig.txt.
-# Here we will look at tree species 1 and liana species 45.
-# This script is easily altered to include more than 1 species of tree and liana.
-# Tree: Alvaradoa amarphoides (ALAM)
-# Liana: Mimosa tenuifolia (MITE)
+# # # # # # # # #
+# Single Files  #
+# # # # # # # # #
+# If you want to simply look at a single output file, read.csv() is perfectly
+# sufficient.
 
-# Read in tree
-ALAM <- list()
-for (j in 1:num_ens) {
-  # check that file isn't blank (tree died in 1st timestep)
-  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_tree_from_data.txt"))>0)
-  {
-    # import each run
-    ALAM[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_tree_from_data.txt"), 
-                              header = FALSE)
-    # creating add columns
-    colnames(ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
-    ALAM[[j]]$month <- seq.int(nrow(ALAM[[j]]))
-    ALAM[[j]]$run <- j
-  }
-  # if file is blank, generate matrix of 0s
-  else {ALAM[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
-  colnames(ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
-  ALAM[[j]]$month <- seq.int(nrow(ALAM[[j]]))
-  ALAM[[j]]$run <- j
-  }
-}
+### Outputs
+output <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_outputs.txt", header = F)
+### From Data
+tree <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_tree_from_data.txt", header = F)
+liana <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_from_data.txt", header = F)
+### Canopy Architecture 
+tree_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_tree_canopy_arc.txt", header = F)
+liana_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_canopy_arc.txt", header = F)
 
-# And it's liana
-MITE_ALAM <- list()
-for (j in 1:num_ens) {
-  # check that file isn't blank (liana died in 1st timestep)
-  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt"))>0)
-  {
-    # import each run
-    MITE_ALAM[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/Mortality/ALAM:MITE/ens_",j,"_0_liana_from_data.txt""), 
-                               header = FALSE)
-    # creating add columns
-    colnames(MITE_ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
-    MITE_ALAM[[j]]$month <- seq.int(nrow(MITE_ALAM[[j]]))
-    MITE_ALAM[[j]]$run <- j
-  }
-  # if file is blank, generate matrix of 0s
-  else {MITE_ALAM[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
-  colnames(MITE_ALAM[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
-  MITE_ALAM[[j]]$month <- seq.int(nrow(MITE_ALAM[[j]]))
-  MITE_ALAM[[j]]$run <- j
-  }
-}
+# Let's look at the data structure
 
-# Generate matrix to store info on months survived
-df <- matrix(ncol = num_tree, nrow = num_ens)
+### Outputs ###
+# Outputs files are organized by output and species number. Species number is determined
+# by the vertical order of plant species in your input file. The first column gives the 
+# timestep. Subsequent columns give output metric by species, and the total across species.
+# The code below shows how to generate quick reference plots for the total across species.
+# As a reference, column 2 gives the number of trees >1cm per hectare for speccies 1,
+# column 3 gives this for species 2, and so on.
 
-# Populate matrix
-for (k in 1:num_ens) {
-  df[k,1] <- length(ALAM[[k]]$month)
-  }
+  library('ggplot2')
+
+  # dbh > 1cm per hectare
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,2+num_sp])) + 
+    theme_classic() + xlab("month") + ylab("number of trees >1cm dbh per hectare")
   
-# Add species names
-names(df) <- species_info[1:num_tree,1]
+  # dbh > 10cm per hectare
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,3+num_sp*2])) + 
+    theme_classic() + xlab("month") + ylab("number of trees >10cm dbh per hectare")
+  
+  # dbh > 30cm per hectare
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,4+num_sp*3])) + 
+    theme_classic() + xlab("month") + ylab("number of trees >30cm dbh per hectare")
+  
+  # total BA of trees > 10cm dbh
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,5+num_sp*4])) + 
+    theme_classic() + xlab("month") + ylab("total BA of trees >10cm dbh [m^2]")
+  
+  # total NPP per timestep in MgC/ha
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,6+num_sp*5])) + 
+    theme_classic() + xlab("month") + ylab("NPP per month [MgC/ha]")
+  
+  # total GPP per timestep in MgC/ha
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,7+num_sp*6])) + 
+    theme_classic()+ xlab("month") + ylab("GPP per month [MgC/ha]")
+  
+  # total AGB per timestep in MgC/ha
+  ggplot(data = output) + 
+    geom_line(mapping = aes(x = output[,1], y = output[,8+num_sp*6])) + 
+    theme_classic()+ xlab("month") + ylab("GPP per month [MgC/ha]")
+    
+### From Data ###
+# From data files contain GPP, NPP, LA, h, CD, and CR data for each timestep,
+# for plants initialized using the forestconfig.txt file.
 
-# Calculate death rate out of 500 (%)
-death_rate <- c()
-for (k in 1:num_tree) {
-  death_rate[k] <- (500-tail(table(df[,k]),1))/5
+colnames(tree) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+colnames(liana) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+
+# There is a large variety of plots that can be easily generated from these files.
+
+### Canopy Architecture ###
+# Canopy arc files give month, vertical canopy layer, and LA
+
+colnames(tree_can) <- c("month","layer","LA")
+colnames(liana_can) <- c("month","layer","LA")
+
+
+# Let's visualize a canopy for a single month of interet.
+# First, we need to create a blank array
+
+canopy <- array(dim = c(max(liana_can$layer+1),4,num_steps))
+
+# and populate it...
+
+# Read LA by layer by month into a 3D array 
+for (i in 1:num_steps) {
+  month <- which(liana_can$month == i)
+  canopy[liana_can$layer[month]+1, ,i] <-liana_can$LA[month]
 }
 
-# Subset species_info for species-specific traits
-fg <- species_info[c(1:num_tree),]
-fg <- subset(fg, select = -c(dmax,tmax,Fregdistgr,g1,s_liana))
+  ## Simple plot of a 1 month snapshot (month 100)
+  # Reverse when plotting so layer 1 is on the bottom.
+  # Change nrow = and ncol = to match the dimensions of canopy[x,y,]
+  plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,100])), ylab = "Canopy layer by meter", 
+     xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
+     border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
+     # Adjust breaks as needed for proper visualization
+     breaks=c(0,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,.1,.5))
+  # Adjust axis ticks to match data
+  axis(2, at = c(.5,1.5,2.5,3.5), labels = c(0,1,2,3))
+  mtext(side = 3, "month 100")
 
-# Add death rate to species info
-fg$death_rate <- death_rate
+# # # # # # # # # # # #
+# Ensembles of files  #
+# # # # # # # # # # # #
+# You may want to read in an ensemble of simulations. It is preferable to use a
+# nested list to keep your data organized, rather than have a series of objects 
+# labeled tree1-tree500. The following code can be easily adapted to load in ensembles
+# of files.
 
-# Calculate SLA, Vcmax, and Rdark
-fg$SLA <- 10000/fg$LMA
-Vcmax <- c()
-Rdark <- c()
-Rdarkm <- c()
-for (i in 1:num_tree) {
-Vcmax[i] <- 10^min(-1.56+0.43*log10(fg$Nmass[i]*1000.0)+0.37*log10(fg$SLA[i]),-0.80+0.45*log10(fg$Pmass[i]*1000.0)+0.25*log10(fg$SLA[i]))
-Rdark[i] <- fg$LMA[i]*(8.5341-130.6*fg$Nmass[i]-567.0*fg$Pmass[i]-0.0137*fg$LMA[i]+11.1*Vcmax[i]+187600.0*fg$Nmass[i]*fg$Pmass[i])*0.001
-Rdarkm[i] <- 8.5341-130.6*fg$Nmass[i]-567.0*fg$Pmass[i]-0.0137*fg$LMA[i]+11.1*Vcmax[i]+187600.0*fg$Nmass[i]*fg$Pmass[i]*0.001
+ens <- list()
+for (j in 1:num_ens) {
+  # check that file isn't blank (plant died in 1st timestep)
+  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/TROLL_",j,"_0_liana_from_data.txt"))>0)
+  {
+    # import each run
+    ens_liana_500[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/TROLL_",j,"_0_liana_from_data.txt"), 
+                                   header = FALSE)
+    # creating add columns
+    colnames(ens_liana_500[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+    ens_liana_500[[j]]$month <- seq.int(nrow(ens_liana_500[[j]]))
+    ens_liana_500[[j]]$run <- j
+  }
+  # if file is blank, generate matrix of 0s
+  else {ens_liana_500[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+  colnames(ens_liana_500[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+  ens_liana_500[[j]]$month <- seq.int(nrow(ens_liana_500[[j]]))
+  ens_liana_500[[j]]$run <- j
+  }
 }
-fg$Vcmax <- Vcmax
-fg$Rdark <- Rdark
-fg$Rdarkm <- Rdarkm
+ens_liana_500 <- bind_rows(ens_liana_500) %>% group_by(month) %>% 
+  summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), 
+                   list(mu = ~ mean(.), sigma = ~ std.error(.), n = ~ length(.))))
 
-# fg is ready for regression analysis
+
 
 # # # # # # # # # # # #
 # Canopy architecture #
@@ -223,30 +247,6 @@ for (i in 1:num_steps) {
 #################################
 # STEP 4: Visualize and analyze #
 #################################
-# # # # # # # # # # # # # #
-# Liana induced mortality #
-# # # # # # # # # # # # # #
-# We can use linear regression to determine which species-specific traits
-# control the ability of lianas to kill their hosts
-
-library('car')
-library('ggplot2')
-
-# It may be useful to only look at instances where death_rate > 0
-fg <- subset(fg, death_rate > 0)
-
-# If log transforming, do this before modeling
-fg$LMA <- log(fg$LMA)    # etc...
-
-# Play with the regression variables to find the best fit.
-model1 <- lm(data = fg, death_rate ~ LMA + Pmass + wsg)
-
-# You can visualize with added variable plots
-avPlots(model1)
-
-# As well as look at the residuals
-res <- qplot(fitted(model1), resid(model1))
-res+geom_hline(yintercept=0)+theme_classic()
 
 # # # # # # # # # # # #
 # Canopy architecture #
@@ -256,21 +256,6 @@ res+geom_hline(yintercept=0)+theme_classic()
 
 library('plot.matrix')
 library('magick')
-
-num_ens <- 1 # Enter the number of runs in the ensemble
-num_steps <- 120 # Enter the number of months modeled
-
-## Simple plot of a 1 month snapshot (month 100)
-# Reverse when plotting so layer 1 is on the bottom.
-# Change nrow = and ncol = to match the dimensions of canopy[x,y,]
-plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,100])), ylab = "Canopy layer by meter", 
-     xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
-     border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
-     # Adjust breaks as needed for proper visualization
-     breaks=c(0,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,.1,.5))
-# Adjust axis ticks to match data
-axis(2, at = c(.5,1.5,2.5,3.5), labels = c(0,1,2,3))
-mtext(side = 3, "month 100")
 
 ## Animated .gif of LAD change by vertical layer over time
 # Set your working directory
