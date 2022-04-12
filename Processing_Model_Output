@@ -18,9 +18,12 @@ $ cd output
 # Use the scp command to copy your data from remote to local. You will need
 # to enter your NetID and CRC password. Your command will differ slightly
 # from what is shown here, but will be similar. Change what appears after
-# the * to determine what output files will be copied.
+# the * to determine what output files will be copied. Useful output files
+# are shown.
 
-$ scp sparker3@crcfe02.crc.nd.edu:/afs/crc.nd.edu/user/s/sparker3/Private/Medvigy_Lab/TROLL/output/*outputs.txt .
+$ scp NetID@epycfe.crc.nd.edu:/afs/crc.nd.edu/user/s/sparker3/Private/Medvigy_Lab/TROLL/output/*outputs.txt .
+$ scp NetID@epycfe.crc.nd.edu:/afs/crc.nd.edu/user/s/sparker3/Private/Medvigy_Lab/TROLL/output/*from_data.txt .
+$ scp NetID@epycfe.crc.nd.edu:/afs/crc.nd.edu/user/s/sparker3/Private/Medvigy_Lab/TROLL/output/*canopy_arc.txt .
 
 ####################################################
 # STEP 2: Convert tab-separated to comma-separated #
@@ -43,8 +46,20 @@ $ sed -i "" 's/\t/,/g' /Users/yourname/Documents/GradSchool/TROLL/output/*/*
 ###################################
 # If you want to simply look at a single output file, read.csv() is perfectly
 # sufficient. I have set up this section in hopes of making it easier to work
-# with large ensembles of runs. I have broken this and the following section
-# down by output type.
+# with large ensembles of runs.
+
+# # # # # # # # #
+# Single Files  #
+# # # # # # # # #
+# Outputs
+output <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_outputs.txt")
+# From Data
+tree <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_tree_from_data.txt")
+liana <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_from_data.txt")
+# Canopy Architecture 
+tree_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_tree_canopy_arc.txt")
+liana_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_canopy_arc.txt")
+
 
 # # # # # # # # # # # # # #
 # Liana induced mortality #
