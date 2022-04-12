@@ -54,6 +54,9 @@ num_ens <- 500 # Enter the number of realizations in each ensemble
 # Load in species data from modified TROLL input file (species table only, comma separated)
 species_info <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/species_table.txt", header = TRUE)
 
+target_sp_num <- 12 # Enter a number or vector containing the species numbers of target species for analysis
+                    # Species 12 = Dalbergia retusa
+
 # # # # # # # # #
 # Single Files  #
 # # # # # # # # #
@@ -116,6 +119,9 @@ liana_can <- read.csv("/Users/yourname/Documents/GradSchool/TROLL/TROLL_0_liana_
     geom_line(mapping = aes(x = output[,1], y = output[,8+num_sp*6])) + 
     theme_classic()+ xlab("month") + ylab("GPP per month [MgC/ha]")
     
+# These scripts are easily modified to isolate specific species. Simply
+# change the 'num_sp' field in the aes() call to '(target_sp_num - 1)'
+    
 ### From Data ###
 # From data files contain GPP, NPP, LA, h, CD, and CR data for each timestep,
 # for plants initialized using the forestconfig.txt file.
@@ -152,7 +158,7 @@ for (i in 1:num_steps) {
      xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
      border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
      # Adjust breaks as needed for proper visualization
-     breaks=c(0,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,.1,.5))
+     breaks=c(0,.05,.1,.15,.2,.25,.3,.35,.4,.45,.5))
   # Adjust axis ticks to match data
   axis(2, at = c(.5,1.5,2.5,3.5), labels = c(0,1,2,3))
   mtext(side = 3, "month 100")
@@ -213,20 +219,22 @@ ens_mean <- bind_rows(ens) %>% group_by(month) %>%
 # These scripts can be easily adapted to use with different files by manipulating 
 # the column names and dataframe dimensions.
 
-#################################
-# STEP 4: Visualize and analyze #
-#################################
+##################################
+# ADDITIONAL DATA VISUALIZATIONS #
+##################################
+# The above is meant to serve as a toolkit. 
+# Here is an example of taking data a bit farther.
 
 # # # # # # # # # # # #
 # Canopy architecture #
 # # # # # # # # # # # #
 # We can visualize how each of the different growth strategies distributes leaf
-# area vertically in the canopy.
+# area vertically in the canopy through time.
 
 library('plot.matrix')
 library('magick')
 
-## Animated .gif of LAD change by vertical layer over time
+### Animated .gif of LAD change by vertical layer over time
 # Set your working directory
 setwd("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/images")
 
@@ -234,13 +242,13 @@ setwd("/Users/yourname/Documents/GradSchool/TROLL/canopy_arc/growth_strat/images
 for (i in 1:num_steps)  {
   par(mar = c(5.1, 4.1, 4.1, 3.1))
   
-  png(paste0(file = "growth_strat_",i,".png"),width = 6, height = 4, res = 300, units = "in")
+  png(paste0(file = "growth_strat_",i,".png"),width = 6,height = 4,res = 300,units = "in")
   
   plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,i])), ylab = "Canopy layer by meter", 
      xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
      border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
      # Adjust breaks as needed for proper visualization
-     breaks=c(0,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5,1e-4,1e-3,1e-2,.1,.5))
+     breaks=c(0,.05,.1,.15,.2,.25,.3,.35,.4,.45,.5))
   # Adjust axis ticks to match data
   axis(2, at = c(.5,1.5,2.5,3.5),labels = c(0,1,2,3))
   
@@ -265,4 +273,3 @@ img_animated
 # Save to disk
 image_write(image = img_animated,
             path = "growth_strat.gif")
-
