@@ -163,15 +163,16 @@ for (i in 1:num_steps) {
 # You may want to read in an ensemble of simulations. It is preferable to use a
 # nested list to keep your data organized, rather than have a series of objects 
 # labeled tree1-tree500. The following code can be easily adapted to load in ensembles
-# of files.
+# of files. This loop assumes your files are named such as ens_#_0_*.txt, in congruence
+# with the Running_TROLL
 
 ens <- list()
 for (j in 1:num_ens) {
   # check that file isn't blank (plant died in 1st timestep)
-  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/TROLL_",j,"_0_liana_from_data.txt"))>0)
+  if (file.size(paste0("/Users/yourname/Documents/GradSchool/TROLL/ens_",j,"_0_liana_from_data.txt"))>0)
   {
     # import each run
-    ens_liana_500[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/TROLL_",j,"_0_liana_from_data.txt"), 
+    ens_liana_500[[j]] <- read.csv(paste0("/Users/yourname/Documents/GradSchool/TROLL/ens_",j,"_0_liana_from_data.txt"), 
                                    header = FALSE)
     # creating add columns
     colnames(ens_liana_500[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
