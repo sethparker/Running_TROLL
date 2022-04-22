@@ -1,6 +1,9 @@
 # Running_TROLL
 R and bash scripts to be used in conjunction with the TROLL model for smooth initialization of batch jobs.
 
+The TROLL source code with the inclusion of lianas can be found at
+https://github.com/davidmedvigy/TROLL/tree/liana
+
 The purpose of this repository is to facilitate the easy initialization and running of the TROLL model on the Notre Dame CRC, as well as provide for simple visualization and analysis of model output. The repository is broken into 3 sections:
 
 (1) Initializing TROLL
