@@ -465,3 +465,28 @@ axis(side = 2, las = 2, mgp = c(3, 0.75, 0))
 
 ################################################################################
 # Figure 9
+
+# Read in 4 ensembles of 500 lianas following the process described in (3) Processing_Model_Output
+# This script uses the names ens_liana_td, ens_liana_b, ens_liana_r, and ens_liana_h
+
+barchart <- data.frame(strat = c(NA), 
+                       GPP = c(ens_liana_td$GPP_mu[109:120],ens_liana_r$GPP_mu[109:120],
+                               ens_liana_h$GPP_mu[109:120],ens_liana_b$GPP_mu[109:120]),
+                       GPP_sigma = c(ens_liana_td$GPP_sigma[109:120],ens_liana_r$GPP_sigma[109:120],
+                                     ens_liana_h$GPP_sigma[109:120],ens_liana_b$GPP_sigma[109:120]),
+                       LA = c(ens_liana_td$LA_mu[109:120],ens_liana_r$LA_mu[109:120],
+                              ens_liana_h$LA_mu[109:120],ens_liana_b$LA_mu[109:120]),
+                       LA_sigma = c(ens_liana_td$LA_sigma[109:120],ens_liana_r$LA_sigma[109:120],
+                                    ens_liana_h$LA_sigma[109:120],ens_liana_b$LA_sigma[109:120]))
+barchart$strat[1:12] <- c("top-down")
+barchart$strat[13:24] <- c("random")
+barchart$strat[25:36] <- c("homogenizing")
+barchart$strat[37:48] <- c("bottom-up")
+barchart2 <- bind_rows(barchart) %>% group_by(strat) %>% 
+                summarise(across(c("GPP","GPP_sigma","LA","LA_sigma"),list(~ mean(.))))
+                
+barplot(barchart2$GPP_1, col = NA, names.arg = barchart2$strat, 
+        lwd = 1, ylab = "Mean liana GPP over final year [kgC/month]",
+        ylim = c(0,max(barchart2$GPP_1+barchart2$GPP_sigma_1+.005)))
+arrows(x0 = c(.7,1.9,3.1,4.3), x1 = c(.7,1.9,3.1,4.3), y0 = c(barchart2$GPP_1-barchart2$GPP_sigma_1), 
+       y1 = c(barchart2$GPP_1+barchart2$GPP_sigma_1), angle = 90, length = 0.5, lwd = 3, code = 3)
