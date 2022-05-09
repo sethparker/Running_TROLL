@@ -406,8 +406,63 @@ barplot(df6$death_rate_CIFU, names = df6$sp, ylab = "% dead in ≤ 10 years",
 ################################################################################
 # Figure 7
 
+# Select regression_table.txt
+df <- read.csv(file.choose())
+
+### Std. response coef. ###
+modelformula <- death_rate_MITE ~ LMA + wsg + Pmass
+df2 <- lapply(df[,all.vars(modelformula)], scale)
+model <- lm(data = df2, death_rate_MITE ~ LMA + wsg + Pmass)
+# Find quartiles with summary()
+df3 <- data.frame(Median = c(coef(model)[2:4]),
+                  q1 = c(-0.85874, -0.4762, -0.6666),
+                  q3 = c(0.77206, 0.7053, 0.4752),
+                  sterr = c(0.1594771, 0.1256163, 0.1593904))
+rownames(df3) <- c("LMA", "wsg", "Pmass")
+
+ggplot(data = df3, aes(x = rownames(df3), lower = Median-(sterr*2.7), middle = Median,
+                       upper = Median+(sterr*2.7), ymin = q1, 
+                       ymax = q3), stat = "identity")+
+  theme_classic() +
+  labs(y = "Std. response coefficient", x = NULL) +
+  theme(panel.border = element_rect(linetype = "solid",
+                                    colour = "black", fill = "NA", size = 0.5),
+        axis.text=element_text(size=18, colour = 'black'),
+        axis.title=element_text(size=18),
+        axis.ticks.length = unit(.3, "cm"))+
+  geom_boxplot(aes(x = rownames(df3), lower = c(-0.85874, -0.4762, -0.6666),
+                   upper = Median+(sterr*2.7), ymin = Median-(sterr*2.7), ymax = q3), 
+               linetype = "dashed", outlier.shape = 1, stat = 'identity', size = .75)+
+  geom_segment(aes(x=0.55, xend=1.45, y=-0.7523870, yend=-0.7523870), colour="red", size=2) +
+  geom_segment(aes(x=1.55, xend=2.45, y=-0.4139388, yend=-0.4139388), colour="red", size=2) +
+  geom_segment(aes(x=2.55, xend=3.45, y=-0.3023176, yend=-0.3023176), colour="red", size=2) +
+  geom_segment(aes(x = c(0.8,2.8,1.8), xend = c(1.2,3.2,2.2), 
+                   y = ..lower.., yend = ..lower..), size = .75)+
+  stat_boxplot(geom = "errorbar", aes(ymin = ..ymax..), width = 0.4, size = .75)+
+  geom_segment(aes(x=c(0.55,2.55,1.55), xend=c(1.45,3.45,2.45), y = ..ymin.., yend = ..ymin..),size = .75) +
+  geom_segment(aes(x=c(0.55,2.55,1.55), xend=c(1.45,3.45,2.45), y = ..upper.., yend = ..upper..),size = .75) +
+  geom_segment(aes(x=c(.55,2.55,1.55), xend=c(.55,2.55,1.55), y = ..ymin.., yend = ..upper..),size = .75) +
+  geom_segment(aes(x=c(1.45,3.45,2.45), xend=c(1.45,3.45,2.45), y = ..ymin.., yend = ..upper..),size = .75) +
+  geom_hline(yintercept = 0, linetype = 1, size = 0.35)
+
+### Relative importance ###
+df4 <- data.frame("Senegalia tenuifolia kill rate" = log(df$death_rate_MITE), LMA = log(df$LMA), wsg = log(df$wsg),
+                  Pmass = log(df$Pmass))
+row.names(df4) <-  species_info$sp[1:38]
+df4 <- subset(df4, Senegalia.tenuifolia.kill.rate != -Inf)
+
+model2 <- lm(data = df4, Senegalia.tenuifolia.kill.rate ~ LMA + Pmass + wsg)
+
+boxplot(vcov(model2)[2:4,2:4]/sum(vcov(model2)[2:4,2:4])*100, col = NA, medcol = 'red',
+        ylab = "Relative Importance [%]", lwd = 2, yaxt = 'n')
+axis(side = 2, las = 2, mgp = c(3, 0.75, 0))
+
+# Export images and arrange in powerpoint to create Figure 7
 
 ################################################################################
 # Figure 8
+
+
+
 ################################################################################
 # Figure 9
