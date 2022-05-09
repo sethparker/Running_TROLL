@@ -461,7 +461,21 @@ axis(side = 2, las = 2, mgp = c(3, 0.75, 0))
 ################################################################################
 # Figure 8
 
+# Select mortality_sensitivity.csv
+mort_sens <- read.csv(file.choose())
 
+par(mar=c(5.1, 7.1, 4.1, 15.1), xpd=TRUE, font = 1)
+plot(x = mort_sens$Initial.liana.LA..m.2., y = mort_sens$COVI...CIFU, type = 'l', col = 'red',
+     xlab = NA, ylab = "% of trees dead in ≤10 years",
+     main = NA, ylim = c(0,42), lwd = 2,
+     xlim = c(.1,1))
+lines(x = mort_sens$Initial.liana.LA..m.2., y = mort_sens$COVI...MITE, col = 'blue', lwd = 2)
+lines(x = mort_sens$Initial.liana.LA..m.2., y = mort_sens$DARE...CIFU, col = 'green', lwd = 2)
+lines(x = mort_sens$Initial.liana.LA..m.2., y = mort_sens$DARE...MITE, col = 'purple', lwd = 2)
+par(font = 3)
+legend(x = 1.1, y = 25, legend = c("Cochlospermum + Senegalia","Cochlospermum + Cissus",
+                                   "Dalbergia + Senegalia","Dalbergia + Cissus"), lty = 1, lwd = 3,
+       col = c("blue","red","purple","green"), title = "Species Combos", bty = 'n')
 
 ################################################################################
 # Figure 9
