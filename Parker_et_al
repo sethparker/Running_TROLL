@@ -60,7 +60,6 @@ plot(x = str$n,
 axis(side = 4, at = pretty(c(7:11)))#range(str$sigma)))
 mtext("Std. deviation", side = 4, line = 3, cex = 2)
 
-
 ################################################################################
 # Figure 3
 
