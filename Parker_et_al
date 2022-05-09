@@ -64,9 +64,37 @@ mtext("Std. deviation", side = 4, line = 3, cex = 2)
 ##########
 # Figure 3
 
+kumar_a <- 0.33
+kumar_b <- c(3.205,2.473,2.115,1.888,1.726,1.602,1.489)
+kumar_median <- c(0.007,0.014,0.021,0.028,0.035,0.042,0.05)
+
+kumar_df <- data.frame(x = seq(0.01,1,0.01),
+                       y1 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[1]),
+                       y2 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[2]),
+                       y3 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[3]),
+                       y4 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[4]),
+                       y5 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[5]),
+                       y6 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[6]),
+                       y7 = pkumar(seq(0.01,1,0.01), a = kumar_a, b = kumar_b[7]))
+
+plot(x = kumar_df$x, y = kumar_df$y1, type = 'l', col = 'red',
+     lwd = 2.5, ylab = 'Cumulative probability density',
+     ylim = c(.3,1), xlab = 'Proportion of LA shed per month')
+lines(x = kumar_df$x, y = kumar_df$y2, col = 'orange', lwd = 2.5)
+lines(x = kumar_df$x, y = kumar_df$y3, col = 'gold', lwd = 2.5)
+lines(x = kumar_df$x, y = kumar_df$y4, col = 'green', lwd = 2.5)
+lines(x = kumar_df$x, y = kumar_df$y5, col = 'blue', lwd = 2.5)
+lines(x = kumar_df$x, y = kumar_df$y6, col = 'violet', lwd = 2.5)
+lines(x = kumar_df$x, y = kumar_df$y7, col = 'black', lwd = 2.5)
+legend(0.5,0.8, legend = c('median = 0.007', 'median = 0.014', 'median = 0.021',
+                              'median = 0.028', 'median = 0.035', 'median = 0.042',
+                              'median = 0.05'), cex = .8,
+       fill = c('red','orange','gold','green','blue','violet','black'))
 
 ##########
 # Figure 4
+
+
 ##########
 # Figure 5
 ##########
