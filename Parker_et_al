@@ -1,4 +1,5 @@
-# This file contains code used for generating the figures in Parker et al. (2022)
+# This file contains R scripts used for generating the figures in Parker et al. (2022)
+# Use the same global variables as described in Processing_Model_Output
 
 # Load Packages
 library('splines')
@@ -14,22 +15,65 @@ library('plot.matrix')
 library('plotrix')
 library('extraDistr')
 
+##########
 # Figure 1
 
+# Change the file path to access the appropriate data for each growth strategy
+liana_can <- read.csv("/File/path/TROLL/canopy_arc/TROLL_0_liana_canopy_arc.txt", header = F)
+colnames(liana_can) <- c("month","layer","LA")
+canopy <- array(dim = c(max(liana_can$layer+1),4,num_steps))
 
+for (i in 1:num_steps) {
+  month <- which(liana_can$month == i)
+  canopy[liana_can$layer[month]+1, ,i] <-liana_can$LA[month]
+}
 
+# Change the subset of canopy [ , ,X] to the target month
+plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,12])), ylab = "Canopy layer by meter", 
+     xlab = NA, asp = T, axis.row = NULL, axis.col = NULL, main = "LA by canopy layer", 
+     border = NA, key=list(side=4, cex.axis=0.75), fmt.key="%.4f",
+     # Adjust breaks as needed for proper visualization
+     breaks=c(0,.05,.1,.15,.2,.25,.3,.35,.4,.45,.5))
+  # Adjust axis ticks to match data
+  axis(2, at = c(.5,1.5,2.5,3.5), labels = c(0,1,2,3))
+  mtext(side = 3, "month 12")
+  
+# Export images, and arrange in Powerpoint to create Figure 1
+
+##########
 # Figure 2
 
+# Select stdev.csv
+str <- read.csv(file.choose())
+
+par(cex = 2, mar = c(4,5,1,4) + 0.3)
+plot(x = str$n,
+     y = str$LA,
+     ylab = bquote("Mean liana LA in year 10 ["*~m^2*"]"), xlab = "# of lianas in ensemble",
+     lwd = 5, type = 'l', ylim = c(15,25), xaxt ='n')
+axis(1, at = c(10,100,200,300,400,500))
+par(new = T)
+plot(x = str$n,
+     y = str$sigma,
+     ylab = '', xlab = '', type = 'l', lwd = 5, col = alpha('red',0.7), 
+     axes = F, ylim = c(7,11))
+axis(side = 4, at = pretty(c(7:11)))#range(str$sigma)))
+mtext("Std. deviation", side = 4, line = 3, cex = 2)
+
+
+##########
 # Figure 3
 
+
+##########
 # Figure 4
-
+##########
 # Figure 5
-
+##########
 # Figure 6
-
+##########
 # Figure 7
-
+##########
 # Figure 8
-
-# FIgure 9
+##########
+# Figure 9
