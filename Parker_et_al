@@ -15,7 +15,7 @@ library('plot.matrix')
 library('plotrix')
 library('extraDistr')
 
-##########
+################################################################################
 # Figure 1
 
 # Change the file path to access the appropriate data for each growth strategy
@@ -40,7 +40,7 @@ plot(matrix(nrow = 3, ncol = 4, rev(canopy[ , ,12])), ylab = "Canopy layer by me
   
 # Export images, and arrange in Powerpoint to create Figure 1
 
-##########
+################################################################################
 # Figure 2
 
 # Select stdev.csv
@@ -61,7 +61,7 @@ axis(side = 4, at = pretty(c(7:11)))#range(str$sigma)))
 mtext("Std. deviation", side = 4, line = 3, cex = 2)
 
 
-##########
+################################################################################
 # Figure 3
 
 kumar_a <- 0.33
@@ -91,17 +91,303 @@ legend(0.5,0.8, legend = c('median = 0.007', 'median = 0.014', 'median = 0.021',
                               'median = 0.05'), cex = .8,
        fill = c('red','orange','gold','green','blue','violet','black'))
 
-##########
+################################################################################
 # Figure 4
 
+# Read in tree
+ens_tree <- list()
+for (j in 1:num_ens) {
+  if (file.size(paste0("File/path/DARE:MITE/top_down_sum/ens_",j,"_0_tree_from_data.txt"))>0)
+  {
+    ens_tree[[j]] <- read.csv(paste0("/File/path/DARE:MITE/top_down_sum/ens_",j,"_0_tree_from_data.txt"), 
+                              header = FALSE)
+    colnames(ens_tree[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+    ens_tree[[j]]$month <- seq.int(nrow(ens_tree[[j]]))
+    ens_tree[[j]]$run <- j
+  }
+  else {ens_tree[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+  colnames(ens_tree[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+  ens_tree[[j]]$month <- seq.int(nrow(ens_tree[[j]]))
+  ens_tree[[j]]$run <- j
+  }
+}
+ens_tree <- bind_rows(ens_tree) %>% group_by(month) %>% 
+  summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), 
+                   list(mu = ~ mean(.), sigma = ~ std.error(.), n = ~ length(.))))
 
-##########
+# Read in liana
+ens_liana <- list()
+for (j in 1:num_ens) {
+  if (file.size(paste0("/File/path/DARE:MITE/top_down_sum/ens_",j,"_0_liana_from_data.txt"))>0)
+  {
+    ens_liana[[j]] <- read.csv(paste0("File/path/DARE:MITE/top_down_sum/ens_",j,"_0_liana_from_data.txt"), 
+                               header = FALSE)
+    colnames(ens_liana[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+    ens_liana[[j]]$month <- seq.int(nrow(ens_liana[[j]]))
+    ens_liana[[j]]$run <- j
+  }
+  else {ens_liana[[j]] <-  data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+  colnames(ens_liana[[j]]) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+  ens_liana[[j]]$month <- seq.int(nrow(ens_liana[[j]]))
+  ens_liana[[j]]$run <- j
+  }
+}
+ens_liana <- bind_rows(ens_liana) %>% group_by(month) %>% 
+  summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), 
+                   list(mu = ~ mean(.), sigma = ~ std.error(.), n = ~ length(.))))                 
+LA <- data.frame(top_down_LA = ens_liana$LA_mu, top_down_se = ens_liana$LA_sigma)
+
+# Plot
+top_down_LA <- ggplot()+
+  geom_line(data = ens_tree, aes(x = month, y = LA_mu, color = "tree LA"), size = 1)+
+  geom_line(data = ens_liana, aes(x = month, y = LA_mu, color = "liana LA"), size = 1)+
+  geom_line(aes(x = 1:120, y = ens_tree$LA_mu+ens_liana$LA_mu, color = "total LA"), size = 1)+
+  geom_ribbon(data = ens_tree, aes(x = month, ymax = LA_mu + LA_sigma, ymin = LA_mu - LA_sigma), alpha = 0.3)+
+  geom_ribbon(data = ens_liana, aes(x = month, ymax = LA_mu + LA_sigma, ymin = LA_mu - LA_sigma), alpha = 0.3)+
+  geom_ribbon(aes(x = 1:120, ymax = ens_tree$LA_mu + ens_liana$LA_mu + std.error(ens_tree$LA_mu + ens_liana$LA_mu),
+                  ymin = ens_tree$LA_mu + ens_liana$LA_mu - std.error(ens_tree$LA_mu + ens_liana$LA_mu)), alpha = 0.3)+
+  labs(x = "Month", y = bquote("Leaf Area ["*~m^2~"]"), color = "Legend")+ ylim(c(0,50))+
+  ggtitle("a. top-down")+ theme_classic(base_size = 22)+
+  scale_x_continuous(limits = c(0,120),breaks = c(0,12,24,36,48,60,72,84,96,108,120))+
+  theme(axis.title.x = element_blank(),legend.position = "none")
+  
+# Change file path and labels for other growth strategies. Export images and arrange in Powerpoint to create Figure 4
+
+################################################################################
 # Figure 5
-##########
+
+num_ens <- 100
+vox_LA_max <- c(0.8,1.17,1.53,1.9,2.27,2.63,3)
+shed_median <- c(0.007,0.014,0.021,0.028,0.035,0.042,0.05)
+sd <- c("sd1","sd2","sd3","sd4","sd5","sd6","sd7")
+
+# Change /File/path throughout
+### Starting with LADvmax ###
+# Tree
+tree <- list()
+for (j in 1:7) {
+  tree[[j]] <- lapply(1:num_ens, function(i) {
+    if (file.size(paste0("/File/path/sens_dec_var/DARE:MITE/vox_la_max/top_down_sum_",sd[j],"/ens_",i,"_0_tree_from_data.txt"))>0)
+    {
+      r <- read.csv(paste0(paste0("/File/path/sens_dec_var/DARE:MITE/vox_la_max/top_down_sum_",sd[j]),"/ens_",i,"_0_tree_from_data.txt"), 
+                    header = FALSE)
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+    else
+    {
+      r <- data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+  })      
+  tree[[j]] <- bind_rows(tree[[j]])
+  tree[[j]] <- tree[[j]] %>% group_by(month) %>% summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), list(mu = ~ mean(.), sigma = ~ sd(.), n = ~ length(.))))
+  tree[[j]]$scenario <- LETTERS[j]
+}
+
+LA_t_final <- c(tail(tree[[1]]$LA_mu,1),tail(tree[[2]]$LA_mu,1),tail(tree[[3]]$LA_mu,1),
+                tail(tree[[4]]$LA_mu,1),tail(tree[[5]]$LA_mu,1),tail(tree[[6]]$LA_mu,1),
+                tail(tree[[7]]$LA_mu,1))
+LA_t_spline <- data.frame(spline(x = vox_LA_max, y = LA_t_final, method = "natural"))
+LA_t_vox_LA <- data.frame(LA_t_final,vox_LA_max)
+
+VLA_tree <- ggplot(data = LA_t_vox_LA) + 
+  geom_point(mapping = aes(x = vox_LA_max, y = LA_t_final)) + 
+  geom_line(data = LA_t_spline, aes(x = x, y = y)) +
+  ylim(-5,60)+
+  theme_classic(base_size = 22) + ylab(bquote("Tree LA ["*~m^2*"]"))
+  
+# Liana
+liana <- list()
+for (j in 1:7) {
+  liana[[j]] <- lapply(1:num_ens, function(i) {
+    if (file.size(paste0("/File/path/sens_dec_var/DARE:MITE/vox_LA_max/top_down_sum_",sd[j],"/ens_",i,"_0_liana_from_data.txt"))>0)
+    {
+      r <- read.csv(paste0(paste0("/File/path/sens_dec_var/DARE:MITE/vox_LA_max/top_down_sum_",sd[j]),"/ens_",i,"_0_liana_from_data.txt"), 
+                    header = FALSE)
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+    else
+    {
+      r <- data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+  })      
+  liana[[j]] <- bind_rows(liana[[j]])
+  liana[[j]] <- liana[[j]] %>% group_by(month) %>% summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), list(mu = ~ mean(.), sigma = ~ sd(.), n = ~ length(.))))
+  liana[[j]]$scenario <- LETTERS[j]
+}
+
+LA_l_final <- c(tail(liana[[1]]$LA_mu,1),tail(liana[[2]]$LA_mu,1),tail(liana[[3]]$LA_mu,1),
+                tail(liana[[4]]$LA_mu,1),tail(liana[[5]]$LA_mu,1),tail(liana[[6]]$LA_mu,1),
+                tail(liana[[7]]$LA_mu,1))
+LA_l_spline <- data.frame(spline(x = vox_LA_max, y = LA_l_final, method = "natural"))
+LA_l_vox_LA <- data.frame(LA_l_final,vox_LA_max)
+
+VLA_liana <- ggplot(data = LA_l_vox_LA) + 
+  geom_point(mapping = aes(x = vox_LA_max, y = LA_l_final)) + 
+  geom_line(data = LA_l_spline, aes(x = x, y = y)) +
+  ylim(-5,60)+
+  theme_classic(base_size = 22) + ylab(bquote("Liana LA ["*~m^2*"]"))
+  
+# Total
+LA_final <- data.frame(LA_final = c(LA_t_final+LA_l_final), vox_LA_max = vox_LA_max)
+LA_spline <- data.frame(spline(x = vox_LA_max, y = LA_final$LA_final, method = "natural"))
+
+VLA_total <- ggplot(data = LA_final) + 
+  geom_point(mapping = aes(x = vox_LA_max, y = LA_final)) + 
+  geom_line(data = LA_spline, aes(x = x, y = y)) +
+  ylim(-5,60)+
+  theme_classic(base_size = 22)+ xlab(bquote("LAD"[Vmax]~"["*~m^2~'/'~m^3*"]")) + ylab(bquote("Total LA ["*~m^2*"]"))
+
+VLA <- plot_grid(VLA_tree + theme(axis.title.x = element_blank(),
+                                  axis.text.x = element_blank()),
+                 VLA_liana + theme(axis.title.x = element_blank(),
+                                   axis.text.x = element_blank()),
+                 VLA_total + theme(axis.title.x = element_blank()), ncol = 1, nrow = 3)
+                 
+# Save variables for Table 2
+cv_vox_la_max <- sqrt(var(LA_final$LA_final))/median(LA_final$LA_final)
+f <- splinefun(x = vox_LA_max, y = LA_final$LA_final, method = "natural")
+elasticity_vox_la_max <- f(vox_LA_max, deriv = 1)[4]*(vox_LA_max[4]/LA_final$LA_final[4])
+variances <- data.frame(vox_la_max = c(var(LA_spline$y)))
+
+### Repeat for shed_median ###
+# Tree
+tree <- list()
+for (j in 1:7) {
+  tree[[j]] <- lapply(1:num_ens, function(i) {
+    if (file.size(paste0("/File/path/sens_dec_var/DARE:MITE/shed_median/top_down_sum_",sd[j],"/ens_",i,"_0_tree_from_data.txt"))>0)
+    {
+      r <- read.csv(paste0(paste0("/File/path/sens_dec_var/DARE:MITE/shed_median/top_down_sum_",sd[j]),"/ens_",i,"_0_tree_from_data.txt"), 
+                    header = FALSE)
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+    else
+    {
+      r <- data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+  })      
+  tree[[j]] <- bind_rows(tree[[j]])
+  tree[[j]] <- tree[[j]] %>% group_by(month) %>% summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), list(mu = ~ mean(.), sigma = ~ sd(.), n = ~ length(.))))
+  tree[[j]]$scenario <- LETTERS[j]
+}
+
+LA_t_final <- c(tail(tree[[1]]$LA_mu,1),tail(tree[[2]]$LA_mu,1),tail(tree[[3]]$LA_mu,1),
+                tail(tree[[4]]$LA_mu,1),tail(tree[[5]]$LA_mu,1),tail(tree[[6]]$LA_mu,1),
+                tail(tree[[7]]$LA_mu,1))
+LA_t_spline <- data.frame(spline(x = shed_median, y = LA_t_final, method = "natural"))
+LA_t_shed_LA <- data.frame(LA_t_final,shed_median)
+
+Sh_tree <- ggplot(data = LA_t_shed_LA) + 
+  geom_point(mapping = aes(x = shed_median, y = LA_t_final)) + 
+  geom_line(data = LA_t_spline, aes(x = x, y = y)) +
+  ylim(-5,60)+
+  theme_classic(base_size = 22) + ylab("Tree LA [m^2]")
+  
+# Liana
+liana <- list()
+for (j in 1:7) {
+  liana[[j]] <- lapply(1:num_ens, function(i) {
+    if (file.size(paste0("/File/path/sens_dec_var/DARE:MITE/shed_median/top_down_sum_",sd[j],"/ens_",i,"_0_liana_from_data.txt"))>0)
+    {
+      r <- read.csv(paste0(paste0("/File/path/sens_dec_var/DARE:MITE/shed_median/top_down_sum_",sd[j]),"/ens_",i,"_0_liana_from_data.txt"), 
+                    header = FALSE)
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+    else
+    {
+      r <- data.frame(matrix(data = 0, nrow = 1, ncol = 6))
+      colnames(r) <- c("GPP","NPP","LA","Height","Crown_Depth","Crown_Radius")
+      r$month <- seq.int(nrow(r))
+      r$run <- i
+      return(r)
+    }
+  })      
+  liana[[j]] <- bind_rows(liana[[j]])
+  liana[[j]] <- liana[[j]] %>% group_by(month) %>% summarize(across(c(GPP,NPP,LA,Height,Crown_Depth,Crown_Radius), list(mu = ~ mean(.), sigma = ~ sd(.), n = ~ length(.))))
+  liana[[j]]$scenario <- LETTERS[j]
+}
+
+LA_l_final <- c(tail(liana[[1]]$LA_mu,1),tail(liana[[2]]$LA_mu,1),tail(liana[[3]]$LA_mu,1),
+                tail(liana[[4]]$LA_mu,1),tail(liana[[5]]$LA_mu,1),tail(liana[[6]]$LA_mu,1),
+                tail(liana[[7]]$LA_mu,1))
+LA_l_spline <- data.frame(spline(x = shed_median, y = LA_l_final, method = "natural"))
+LA_l_shed_LA <- data.frame(LA_l_final,shed_median)
+
+Sh_liana <- ggplot(data = LA_l_shed_LA) + 
+  geom_point(mapping = aes(x = shed_median, y = LA_l_final)) + 
+  geom_line(data = LA_l_spline, aes(x = x, y = y)) +
+  ylim(-5,60)+
+  theme_classic(base_size = 22) + ylab("Liana LA [m^2]")
+  
+# Total
+LA_final <- data.frame(LA_final = c(LA_t_final+LA_l_final), shed_median = shed_median)
+LA_spline <- data.frame(spline(x = shed_median, y = LA_final$LA_final, method = "natural"))
+
+Sh_total <- ggplot(data = LA_final) + 
+  geom_point(mapping = aes(x = shed_median, y = LA_final)) + 
+  geom_line(data = LA_spline, aes(x = x, y = y)) +
+  ylim(-5,60)+
+  theme_classic(base_size = 22)+ xlab("Kumaraswamy dist. median") + ylab("Total LA [m^2]")
+  
+Sh <- plot_grid(Sh_tree + theme(axis.title.y = element_blank(),
+                                axis.title.x = element_blank(),
+                                axis.text.x = element_blank()),
+                Sh_liana + theme(axis.title.y = element_blank(),
+                                 axis.title.x = element_blank(),
+                                 axis.text.x = element_blank()),
+                Sh_total + theme(axis.title.y = element_blank(),
+                                 axis.title.x = element_blank()),
+                ncol = 1, nrow = 3)
+  
+# Save variables for Table 2
+cv_shed_median <- sqrt(var(LA_final$LA_final))/median(LA_final$LA_final)
+f <- splinefun(x = shed_median, y = LA_final$LA_final, method = "natural")
+elasticity_shed_median <- f(shed_median, deriv = 1)[4]*(shed_median[4]/LA_final$LA_final[4])
+variances$shed_median <- var(LA_spline$y)
+
+# Results
+Fig5 <- plot_grid(ncol = 2, nrow = 1, VLA, Sh,
+                  labels = NA,
+                  label_size = 22)
+partial_variances <- variances/sum(variances)*100
+cv <- data.frame(x = c("Maximum Voxel LAD", "Shed Median"), 
+                 y = c(cv_vox_la_max*100, cv_shed_median*100))
+elasticity <- data.frame(x = c("Maximum Voxel LAD", "Shed Median"), 
+                         y = c(elasticity_vox_la_max, elasticity_shed_median))  
+Fig5
+partial_variances
+cv
+elasticity
+
+################################################################################
 # Figure 6
-##########
+
+################################################################################
 # Figure 7
-##########
+################################################################################
 # Figure 8
-##########
+################################################################################
 # Figure 9
