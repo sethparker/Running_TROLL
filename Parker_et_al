@@ -385,8 +385,28 @@ elasticity
 ################################################################################
 # Figure 6
 
+# select regression_table.txt
+df <- read.csv(file.choose())
+
+df <- df[order(-df$death_rate_MITE),]
+par(cex.lab=1.5)
+par(cex.axis=1.25)
+par(mar=c(15.5,6,4,4))
+
+barplot(df6$death_rate_MITE, font = 3, las = 2.5, col = 'seagreen', ylim = c(0,41.6))
+
+barplot(df6$death_rate_HIRE, font = 3, las = 2.5, col = 'orchid4', ylim = c(0,41.6))
+
+barplot(df6$death_rate_CIFU, names = df6$sp, ylab = "% dead in ≤ 10 years", 
+        font = 3, las = 2.5, col = 'lightcoral', ylim = c(0,41.6))
+        
+# Export images and arrange in Powerpoint to create Figure 6
+# Matching text labels can be exported in colors 'seagreen', 'orchid4', and 'lightcoral'
+
 ################################################################################
 # Figure 7
+
+
 ################################################################################
 # Figure 8
 ################################################################################
